@@ -16,6 +16,8 @@ const Editor = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [taskInfo, setTaskInfo] = useState<{ type: string; confidence: number } | null>(null);
@@ -105,12 +107,18 @@ const Editor = () => {
           image_base64: uploadedImage,
           resolution: "1024x1024",
           quality: "balanced",
+          media_type: mediaType,
         },
       });
 
       if (error) throw error;
 
-      setGeneratedImage(data.image_url);
+      if (mediaType === "video") {
+        setGeneratedVideo(data.video_url || data.image_url);
+      } else {
+        setGeneratedImage(data.image_url);
+      }
+      
       setTaskInfo({
         type: data.task_type || "generation",
         confidence: data.confidence || 0.95,
@@ -143,7 +151,7 @@ const Editor = () => {
       await supabase.from("edit_history").insert({
         user_id: user.id,
         prompt,
-        image_url: data.image_url,
+        image_url: data.video_url || data.image_url,
         original_image_url: uploadedImage,
         task_type: data.task_type,
         confidence: data.confidence,
@@ -153,8 +161,8 @@ const Editor = () => {
       });
 
       toast({
-        title: "Image generated!",
-        description: "Your AI-powered image is ready.",
+        title: `${mediaType === "video" ? "Video" : "Image"} generated!`,
+        description: `Your AI-powered ${mediaType} is ready.`,
       });
     } catch (error: any) {
       console.error("Generation error:", error);
@@ -190,6 +198,8 @@ const Editor = () => {
             onPromptChange={setPrompt}
             onGenerate={handleGenerate}
             isGenerating={isGenerating}
+            mediaType={mediaType}
+            onMediaTypeChange={setMediaType}
           />
 
           {taskInfo && (
@@ -207,8 +217,10 @@ const Editor = () => {
           <ImageCanvas
             originalImage={uploadedImage}
             generatedImage={generatedImage}
+            generatedVideo={generatedVideo}
             isGenerating={isGenerating}
             progress={progress}
+            mediaType={mediaType}
           />
         </div>
 

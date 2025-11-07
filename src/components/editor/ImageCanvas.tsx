@@ -5,22 +5,27 @@ import { Progress } from "@/components/ui/progress";
 interface ImageCanvasProps {
   originalImage: string | null;
   generatedImage: string | null;
+  generatedVideo?: string | null;
   isGenerating: boolean;
   progress: number;
+  mediaType: "image" | "video";
 }
 
 export const ImageCanvas = ({
   originalImage,
   generatedImage,
+  generatedVideo,
   isGenerating,
   progress,
+  mediaType,
 }: ImageCanvasProps) => {
   const handleDownload = () => {
-    if (!generatedImage) return;
+    const mediaUrl = mediaType === "video" ? generatedVideo : generatedImage;
+    if (!mediaUrl) return;
     
     const link = document.createElement("a");
-    link.href = generatedImage;
-    link.download = `ai-generated-${Date.now()}.png`;
+    link.href = mediaUrl;
+    link.download = `ai-generated-${Date.now()}.${mediaType === "video" ? "mp4" : "png"}`;
     link.click();
   };
 
@@ -28,7 +33,7 @@ export const ImageCanvas = ({
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Canvas</h2>
-        {generatedImage && (
+        {(generatedImage || generatedVideo) && (
           <Button onClick={handleDownload} variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Download
@@ -43,9 +48,17 @@ export const ImageCanvas = ({
             <div className="w-64 space-y-2">
               <Progress value={progress} className="h-2" />
               <p className="text-center text-sm text-muted-foreground">
-                Generating your AI-powered image...
+                Generating your AI-powered {mediaType}...
               </p>
             </div>
+          </div>
+        ) : generatedVideo ? (
+          <div className="relative max-w-full max-h-full">
+            <video
+              src={generatedVideo}
+              controls
+              className="max-w-full max-h-[calc(100vh-12rem)] rounded-lg shadow-2xl border-2 border-glass-border"
+            />
           </div>
         ) : generatedImage ? (
           <div className="relative max-w-full max-h-full">

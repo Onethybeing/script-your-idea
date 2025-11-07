@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Sparkles, LogOut, Coins } from "lucide-react";
+import { Sparkles, LogOut, Coins, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +40,16 @@ export const Header = ({ credits, userEmail }: HeaderProps) => {
             <span className="font-semibold">{credits}</span>
             <span className="text-sm text-muted-foreground">credits</span>
           </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/upload")}
+            className="hidden md:flex"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload
+          </Button>
           
           <div className="text-sm text-muted-foreground hidden md:block">
             {userEmail}

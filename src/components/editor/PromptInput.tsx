@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Image, Video } from "lucide-react";
 
 interface PromptInputProps {
   prompt: string;
   onPromptChange: (value: string) => void;
   onGenerate: () => void;
   isGenerating: boolean;
+  mediaType: "image" | "video";
+  onMediaTypeChange: (type: "image" | "video") => void;
 }
 
 export const PromptInput = ({
@@ -14,6 +16,8 @@ export const PromptInput = ({
   onPromptChange,
   onGenerate,
   isGenerating,
+  mediaType,
+  onMediaTypeChange,
 }: PromptInputProps) => {
   const suggestions = [
     "Add morning sunlight",
@@ -24,9 +28,31 @@ export const PromptInput = ({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        AI Prompt
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          AI Prompt
+        </h3>
+        <div className="flex gap-2">
+          <Button
+            variant={mediaType === "image" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onMediaTypeChange("image")}
+            disabled={isGenerating}
+          >
+            <Image className="w-4 h-4 mr-1" />
+            Image
+          </Button>
+          <Button
+            variant={mediaType === "video" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onMediaTypeChange("video")}
+            disabled={isGenerating}
+          >
+            <Video className="w-4 h-4 mr-1" />
+            Video
+          </Button>
+        </div>
+      </div>
       
       <Textarea
         value={prompt}
@@ -65,7 +91,7 @@ export const PromptInput = ({
         ) : (
           <>
             <Sparkles className="mr-2 h-5 w-5" />
-            Generate Image
+            Generate {mediaType === "video" ? "Video" : "Image"}
           </>
         )}
       </Button>

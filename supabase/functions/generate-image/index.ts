@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, image_base64, resolution, quality } = await req.json();
+    const { prompt, image_base64, resolution, quality, media_type } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -30,14 +30,14 @@ serve(async (req) => {
         role: "user",
         content: image_base64
           ? [
-              { type: "text", text: prompt },
+              { type: "text", text: media_type === "video" ? `Generate a video: ${prompt}` : prompt },
               { type: "image_url", image_url: { url: image_base64 } }
             ]
-          : prompt
+          : (media_type === "video" ? `Generate a video: ${prompt}` : prompt)
       }
     ];
 
-    // Call Lovable AI Gateway for image generation
+    // Call Lovable AI Gateway for image/video generation
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -47,7 +47,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image-preview",
         messages,
-        modalities: ["image", "text"],
+        modalities: media_type === "video" ? ["video", "text"] : ["image", "text"],
       }),
     });
 
@@ -77,16 +77,19 @@ serve(async (req) => {
 
     const data = await response.json();
     const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const videoUrl = data.choices?.[0]?.message?.videos?.[0]?.video_url?.url;
+    const mediaUrl = videoUrl || imageUrl;
 
-    if (!imageUrl) {
-      throw new Error("No image generated");
+    if (!mediaUrl) {
+      throw new Error("No media generated");
     }
 
     const generationTime = Date.now() - startTime;
 
     return new Response(
       JSON.stringify({
-        image_url: imageUrl,
+        image_url: mediaUrl,
+        video_url: videoUrl,
         generation_time_ms: generationTime,
         model_used: "Gemini 2.5 Flash Image",
         task_type: taskType,
